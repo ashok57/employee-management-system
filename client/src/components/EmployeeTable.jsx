@@ -1,7 +1,11 @@
-function EmployeeTable({Employees, onEdit, onDelete}){
-  return(
-    <div className="table-container">
-      <table>
+function EmployeeTable({ employees, onEdit, onDelete }) {
+
+  return (
+    <div className="employee-table-container">
+
+      <table className="employee-table">
+
+        {/* Table Header */}
         <thead>
           <tr>
             <th>Employee ID</th>
@@ -9,42 +13,78 @@ function EmployeeTable({Employees, onEdit, onDelete}){
             <th>Email</th>
             <th>Department</th>
             <th>Designation</th>
+            <th>Salary</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
 
-
+        {/* Table Body */}
         <tbody>
 
-          {Employees.map((Employee)=>{
+          {employees.length > 0 ? (
 
-            <tr key={employee.id}>
+            employees.map((employee) => (
 
-              <td>{employee.id}</td>
-              <td>{employee.name}</td>
-              <td>{employee.email}</td>
-              <td>{employee.department}</td>
-              <td>{employee.designation}</td>
+              <tr key={employee.id}>
 
-              <td>
-                <span className="`status {employee.status.toLowerCase()}`">
-                {employee.status}
-                </span>
-              </td> 
+                <td>{employee.id}</td>
 
-              <td>
-                <button onClick={() => onEdit(employee)}>
-                  Edit
-                </button>
+                <td>{employee.name}</td>
 
-                <button onClick={() => onDelete(employee.id)}>
-                  Delete
-                </button>
+                <td>{employee.email}</td>
+
+                <td>{employee.department}</td>
+
+                <td>{employee.designation}</td>
+
+                <td>
+                  ₹{Number(employee.salary).toLocaleString("en-IN")}
+                </td>
+
+                <td>
+                  <span
+                    className={
+                      employee.status === "Active"
+                        ? "status-active"
+                        : "status-inactive"
+                    }
+                  >
+                    {employee.status}
+                  </span>
+                </td>
+
+                <td className="action-buttons">
+
+                  <button
+                    className="edit-button"
+                    onClick={() => onEdit(employee)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    className="delete-button"
+                    onClick={() => onDelete(employee.id)}
+                  >
+                    Delete
+                  </button>
+
+                </td>
+
+              </tr>
+
+            ))
+
+          ) : (
+
+            <tr>
+              <td colSpan="8" className="no-data">
+                No employees found.
               </td>
             </tr>
 
-          })}
+          )}
 
         </tbody>
 

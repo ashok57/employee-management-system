@@ -11,6 +11,7 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
+import EditEmployee from "./pages/EditEmployee";
 
 function App() {
   // Main employee state
@@ -57,6 +58,16 @@ function App() {
             />
 
             <Route
+              path="/edit-employee/:id"
+            element={
+            <EditEmployee
+            employees={employees}
+            setEmployees={setEmployees}
+                 />
+              }
+            />
+
+            <Route
               path="/employees"
               element={
                 <Employees
@@ -66,14 +77,15 @@ function App() {
               }
             />
 
-            <Route
+           <Route
               path="/add-employee"
               element={
                 <AddEmployee
-                  onAddEmployee={handleAddEmployee}
-                />
+                 onAddEmployee={handleAddEmployee}
+                 employees={employees}
+               />
               }
-            />
+           />
           </Routes>
         </main>
       </div>

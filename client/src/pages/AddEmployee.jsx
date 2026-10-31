@@ -1,155 +1,182 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function AddEmployee ({onAddEmployee}){
-  const navigate =  useNavigate();
+function AddEmployee({ onAddEmployee, employees }) {
 
+  const navigate = useNavigate();
+
+  // Form state
   const [formData, setFormData] = useState({
-    id :"",
-    name:  "",
-    email:"",
+    name: "",
+    email: "",
     phone: "",
-    department: "",
-    designation :"",
+    department: "IT",
+    designation: "",
     joiningDate: "",
-    salary : "",
-    status :"Active",
+    salary: "",
+    status: "Active"
   });
 
-const handleChange =(e) => {
-  const {name, value} = e.target;
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-  setFormData({
-    ...formData,
-  [name] : value
-  });
-};
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
+  // Submit form
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
+    // Generate unique employee ID
+    const nextId = employees.reduce((max, employee) => {
+      const number = Number(employee.id.replace("EMP", ""));
+      return Math.max(max, number);
+    }, 0) + 1;
 
-const handleSubmit=(e) =>{
-  e.preventDefault();
+    const newEmployee = {
+      id: `EMP${String(nextId).padStart(3, "0")}`,
+      ...formData,
+      salary: Number(formData.salary)
+    };
 
-  onAddEmployee({
-    ...formData,
-    salary : Number(formData.salary)
-  });
+    // Add employee to main state
+    onAddEmployee(newEmployee);
 
-  alert("Employee added successfully!");
+    alert("Employee added successfully!");
 
-  navigate("/Employees");
-};
+    // Navigate to employee list
+    navigate("/employees");
+  };
 
-return (
-  <div className="add-employee-page">
+  return (
+    <div className="add-employee-page">
 
-  <h1>Add new Employees</h1>
-  <p>Enter employee information below.</p>
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <h1>Add Employee</h1>
+          <p>Register a new employee in your organisation</p>
+        </div>
+      </div>
 
-  <form onSubmit={handleSubmit}>
+      {/* Employee Form */}
+      <form className="employee-form" onSubmit={handleSubmit}>
 
-  <label>Employee ID</label>
-  <input
-    name = "id"
-    value={formData.id}
-    onChange={handleChange}
-    placeholder="EMP005"
-    required
-  />
+        <div className="form-group">
+          <label>Full Name</label>
+          <input
+            type="text"
+            name="name"
+            placeholder="Enter employee name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-  <label>Full Name</label>
-  <input
-    name = "name"
-    value={formData.name}
-    onChange={handleChange}
-    placeholder="Enter full name"
-    required
-  />
+        <div className="form-group">
+          <label>Email Address</label>
+          <input
+            type="email"
+            name="email"
+            placeholder="Enter email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-  <label>Email Address</label>
-  <input
-    type="email"
-    name="email"
-    value={formData.email}
-    onChange={handleChange}
-    placeholder="Enter your email ID"
-    required
-  />
+        <div className="form-group">
+          <label>Phone Number</label>
+          <input
+            type="tel"
+            name="phone"
+            placeholder="Enter phone number"
+            pattern="[0-9]{10}"
+            title="Enter a valid 10-digit phone number"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-  <label>Phone Number</label>
-  <input
-    type="tel"
-    name="phone"
-    value={formData.phone}
-    onChange={handleChange}
-    placeholder="10 digit phone number"
-    pattern="[0-9]{10}"
-    required
-  />
+        <div className="form-group">
+          <label>Department</label>
+          <select
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+          >
+            <option value="IT">IT</option>
+            <option value="HR">HR</option>
+            <option value="Finance">Finance</option>
+            <option value="Sales">Sales</option>
+            <option value="Marketing">Marketing</option>
+          </select>
+        </div>
 
-  <label>Department</label>
-  <select
-    name="department"
-    value={formData.department}
-    onChange={handleChange}
-    required
-  >
-    <option value="">Select Department</option>
-    <option value="IT">IT</option>
-    <option value="HR">HR</option>
-    <option value="Finance">Finance</option>
-    <option value="Marketing">Marketing</option>
-    <option value="Sales">Sales</option>
-  </select>
+        <div className="form-group">
+          <label>Designation</label>
+          <input
+            type="text"
+            name="designation"
+            placeholder="Enter designation"
+            value={formData.designation}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-  <label>Designation</label>
-  <input
-    name="designation"
-    value={formData.designation}
-    onChange={handleChange}
-    placeholder="Frontend Developer"
-    required
-  />
+        <div className="form-group">
+          <label>Joining Date</label>
+          <input
+            type="date"
+            name="joiningDate"
+            value={formData.joiningDate}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
+        <div className="form-group">
+          <label>Monthly Salary (₹)</label>
+          <input
+            type="number"
+            name="salary"
+            placeholder="Enter salary"
+            min="1"
+            value={formData.salary}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-  <label>Joining Date</label>
-        <input
-          type="date"
-          name="joiningDate"
-          value={formData.joiningDate}
-          onChange={handleChange}
-          required
-        />
+        <div className="form-group">
+          <label>Employee Status</label>
+          <select
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+          >
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
 
-        <label>Monthly Salary</label>
-        <input
-          type="number"
-          name="salary"
-          value={formData.salary}
-          onChange={handleChange}
-          placeholder="30000"
-          min="1"
-          required
-        />
+        {/* Buttons */}
+        <div className="form-actions">
 
-        <label>Status</label>
-        <select
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-        >
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
-
-        <div className="form-buttons">
-
-          <button type="submit">
-            Save Employee
+          <button type="submit" className="save-button">
+            Add Employee
           </button>
 
           <button
             type="button"
+            className="cancel-button"
             onClick={() => navigate("/employees")}
           >
             Cancel
@@ -164,5 +191,3 @@ return (
 }
 
 export default AddEmployee;
-
-

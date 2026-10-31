@@ -43,9 +43,9 @@ function Employees({ employees, setEmployees }) {
   };
 
   // Edit employee
-  const handleEdit = (employee) => {
-    alert("Edit functionality will be connected next: " + employee.name);
-  };
+const handleEdit = (employee) => {
+  navigate(`/edit-employee/${employee.id}`);
+};
 
   return (
     <div className="employees-page">
