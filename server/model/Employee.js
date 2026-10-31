@@ -23,10 +23,10 @@ const employeeSchema = new mongoose.Schema(
       trim: true,
     },
 
-    phone: {
+      phone: {
       type: String,
       required: [true, "Phone number is required"],
-      match: [/^[0-9]]{10}$/, "Enter a valid 10-digit phone number"],
+      match: [/^[0-9]{10}$/, "Enter a valid 10-digit phone number"]
     },
 
     department: {
@@ -62,3 +62,8 @@ const employeeSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+
+const Employee = mongoose.model("Employee", employeeSchema);
+
+module.exports = Employee;
