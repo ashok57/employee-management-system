@@ -1,8 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const employeeRoutes = require("./route/employeeRoutes");
+
 require("dotenv").config();
+
+
+const employeeRoutes = require("./route/employeeRoutes");
+const activityRoutes = require("./route/activityRoutes");
+const authRoutes = require("./route/authRoutes");
+
+
 
 const app = express();
 
@@ -10,8 +17,14 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({extended : true}));
+
+
 
 app.use("/api/employees", employeeRoutes);
+app.use("/api/activities", activityRoutes);
+app.use("/api/auth", authRoutes);
+
 
 // Test route
 app.get("/", (req, res) => {
