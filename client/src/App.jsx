@@ -1,10 +1,10 @@
 
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
-  Route
+  Route,
+  Navigate
 } from "react-router-dom";
 
 import Sidebar from "./components/Sidebar";
@@ -13,44 +13,153 @@ import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
 
-function App() {
-  // Main employee state
-  const [employees, setEmployees] = useState([
-    {
-      id: "EMP001",
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      phone: "9876543210",
-      department: "IT",
-      designation: "Frontend Developer",
-      joiningDate: "2025-01-10",
-      salary: 35000,
-      status: "Active"
-    },
-    {
-      id: "EMP002",
-      name: "Priya Singh",
-      email: "priya@gmail.com",
-      phone: "9876543211",
-      department: "HR",
-      designation: "HR Manager",
-      joiningDate: "2024-06-15",
-      salary: 45000,
-      status: "Active"
-    }
-  ]);
+import {
+  getEmployees,
+  createEmployee,
+  updateEmployee,
+  deleteEmployee
+} from "./services/employeeService";
+import { CanSoda } from "lucide-react";
 
-  // Add employee function
-  const handleAddEmployee = (newEmployee) => {
-    setEmployees((prev) => [...prev, newEmployee]);
+function App() {
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // GET EMPLOYEES
+ 
+const fetchEmployees = async () => {
+  try {
+    setLoading(true);
+    setError("");
+
+    const response = await getEmployees();
+
+    console.log("FULL RESPONSE:", response);
+    console.log("RESPONSE DATA:", response.data);
+
+    // Extract employee array FIRST
+    const employeeData = response.data?.data;
+
+    // Now check the array
+    console.log(
+      "Is employeeData an array:",
+      Array.isArray(employeeData)
+    );
+
+    if (!Array.isArray(employeeData)) {
+      console.error("Unexpected API structure:", response.data);
+      throw new Error("Employee data is not an array.");
+    }
+
+    const employeeList = employeeData.map((employee) => ({
+      ...employee,
+      id: employee._id || employee.id
+    }));
+
+    console.log("Final Employee List:", employeeList);
+
+    setEmployees(employeeList);
+
+  } catch (err) {
+    console.error("Error fetching employees:", err);
+
+    setError(
+      err.response?.data?.message ||
+      err.message ||
+      "Unable to load employees."
+    );
+
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  // ADD EMPLOYEE
+  const handleAddEmployee = async (newEmployee) => {
+    try {
+
+      console.log("Sending employee data : ", newEmployee);
+      const response = await createEmployee(newEmployee);
+
+
+      Console.log("POST API RESPONSE : ", response.data);
+
+      const savedEmployee = {
+        ...response.data.data,
+        id: response.data.data._id
+      };
+
+      setEmployees((prev) => [...prev, savedEmployee]);
+    } catch (err) {
+      console.error("Error adding employee:", err);
+      throw err;
+    }
+  };
+
+  // UPDATE EMPLOYEE
+  const handleUpdateEmployee = async (id, updatedEmployee) => {
+    try {
+      const response = await updateEmployee(id, updatedEmployee);
+
+      const savedEmployee = {
+        ...response.data.data,
+        id: response.data.data._id
+      };
+
+      setEmployees((prev) =>
+        prev.map((employee) =>
+          employee.id === id ? savedEmployee : employee
+        )
+      );
+    } catch (err) {
+      console.error("Error updating employee:", err);
+      throw err;
+    }
+  };
+
+  // DELETE EMPLOYEE
+  const handleDeleteEmployee = async (id) => {
+    try {
+      await deleteEmployee(id);
+
+      setEmployees((prev) =>
+        prev.filter((employee) => employee.id !== id)
+      );
+    } catch (err) {
+      console.error("Error deleting employee:", err);
+      throw err;
+    }
   };
 
   return (
     <BrowserRouter>
       <div className="app-layout">
+
         <Sidebar />
 
         <main className="main-content">
+
+          {loading && (
+            <div className="status-message">
+              Loading employees...
+            </div>
+          )}
+
+          {error && (
+            <div className="error-message">
+              {error}
+              <button onClick={fetchEmployees}>
+                Retry
+              </button>
+            </div>
+          )}
+
           <Routes>
             <Route
               path="/"
@@ -58,35 +167,38 @@ function App() {
             />
 
             <Route
-              path="/edit-employee/:id"
-            element={
-            <EditEmployee
-            employees={employees}
-            setEmployees={setEmployees}
-                 />
-              }
-            />
-
-            <Route
               path="/employees"
               element={
                 <Employees
                   employees={employees}
-                  setEmployees={setEmployees}
+                  onDeleteEmployee={handleDeleteEmployee}
                 />
               }
             />
 
-           <Route
+            <Route
               path="/add-employee"
               element={
                 <AddEmployee
-                 onAddEmployee={handleAddEmployee}
-                 employees={employees}
-               />
+                  onAddEmployee={handleAddEmployee}
+                  employees={employees}
+                />
               }
-           />
+            />
+
+            <Route
+              path="/edit-employee/:id"
+              element={
+                <EditEmployee
+                  employees={employees}
+                  onUpdateEmployee={handleUpdateEmployee}
+                />
+              }
+            />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+
         </main>
       </div>
     </BrowserRouter>

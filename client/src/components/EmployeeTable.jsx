@@ -1,15 +1,14 @@
-function EmployeeTable({ employees, onEdit, onDelete }) {
 
+function EmployeeTable({ employees = [], onEdit, onDelete }) {
   return (
     <div className="employee-table-container">
 
       <table className="employee-table">
 
-        {/* Table Header */}
         <thead>
           <tr>
             <th>Employee ID</th>
-            <th>Name</th>
+            <th>Employee</th>
             <th>Email</th>
             <th>Department</th>
             <th>Designation</th>
@@ -19,73 +18,84 @@ function EmployeeTable({ employees, onEdit, onDelete }) {
           </tr>
         </thead>
 
-        {/* Table Body */}
         <tbody>
-
           {employees.length > 0 ? (
+            employees.map((employee) => {
+              const id = employee.id || employee._id;
 
-            employees.map((employee) => (
+              return (
+                <tr key={id}>
 
-              <tr key={employee.id}>
+                  <td>
+                    <strong className="employee-id">
+                      {employee.employeeId || "N/A"}
+                    </strong>
+                  </td>
 
-                <td>{employee.id}</td>
+                  <td>
+                    <div className="employee-name-cell">
+                      <div className="employee-avatar">
+                        {(employee.name || "?")
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
 
-                <td>{employee.name}</td>
+                      <strong>{employee.name || "N/A"}</strong>
+                    </div>
+                  </td>
 
-                <td>{employee.email}</td>
+                  <td>{employee.email || "N/A"}</td>
 
-                <td>{employee.department}</td>
+                  <td>{employee.department || "N/A"}</td>
 
-                <td>{employee.designation}</td>
+                  <td>{employee.designation || "N/A"}</td>
 
-                <td>
-                  ₹{Number(employee.salary).toLocaleString("en-IN")}
-                </td>
+                  <td className="salary-cell">
+                    ₹{Number(employee.salary || 0).toLocaleString("en-IN")}
+                  </td>
 
-                <td>
-                  <span
-                    className={
-                      employee.status === "Active"
-                        ? "status-active"
-                        : "status-inactive"
-                    }
-                  >
-                    {employee.status}
-                  </span>
-                </td>
+                  <td>
+                    <span
+                      className={`employee-status ${
+                        employee.status === "Active"
+                          ? "status-active"
+                          : "status-inactive"
+                      }`}
+                    >
+                      {employee.status || "Unknown"}
+                    </span>
+                  </td>
 
-                <td className="action-buttons">
+                  <td>
+                    <div className="action-buttons">
 
-                  <button
-                    className="edit-button"
-                    onClick={() => onEdit(employee)}
-                  >
-                    Edit
-                  </button>
+                      <button
+                        className="edit-button"
+                        onClick={() => onEdit(employee)}
+                      >
+                        Edit
+                      </button>
 
-                  <button
-                    className="delete-button"
-                    onClick={() => onDelete(employee.id)}
-                  >
-                    Delete
-                  </button>
+                      <button
+                        className="delete-button"
+                        onClick={() => onDelete(id)}
+                      >
+                        Delete
+                      </button>
 
-                </td>
+                    </div>
+                  </td>
 
-              </tr>
-
-            ))
-
+                </tr>
+              );
+            })
           ) : (
-
             <tr>
               <td colSpan="8" className="no-data">
-                No employees found.
+                No employees found. Try changing your search or filters.
               </td>
             </tr>
-
           )}
-
         </tbody>
 
       </table>

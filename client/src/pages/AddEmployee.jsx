@@ -1,11 +1,10 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function AddEmployee({ onAddEmployee, employees }) {
-
   const navigate = useNavigate();
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,6 +16,9 @@ function AddEmployee({ onAddEmployee, employees }) {
     status: "Active"
   });
 
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,35 +29,53 @@ function AddEmployee({ onAddEmployee, employees }) {
     }));
   };
 
+  // Generate next employee ID
+  const generateEmployeeId = () => {
+    const maxId = employees.reduce((max, employee) => {
+      const currentId = Number(
+        (employee.employeeId || "").replace("EMP", "")
+      );
+
+      return Math.max(max, currentId || 0);
+    }, 0);
+
+    return `EMP${String(maxId + 1).padStart(3, "0")}`;
+  };
+
   // Submit form
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Generate unique employee ID
-    const nextId = employees.reduce((max, employee) => {
-      const number = Number(employee.id.replace("EMP", ""));
-      return Math.max(max, number);
-    }, 0) + 1;
+    setSaving(true);
+    setError("");
 
     const newEmployee = {
-      id: `EMP${String(nextId).padStart(3, "0")}`,
+      employeeId: generateEmployeeId(),
       ...formData,
       salary: Number(formData.salary)
     };
 
-    // Add employee to main state
-    onAddEmployee(newEmployee);
+    try {
+      await onAddEmployee(newEmployee);
 
-    alert("Employee added successfully!");
+      alert("Employee added successfully!");
 
-    // Navigate to employee list
-    navigate("/employees");
+      navigate("/employees");
+    } catch (err) {
+      console.error("Add employee error:", err);
+
+      setError(
+        err.response?.data?.message ||
+        "Unable to add employee. Please try again."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="add-employee-page">
 
-      {/* Header */}
       <div className="page-header">
         <div>
           <h1>Add Employee</h1>
@@ -63,8 +83,11 @@ function AddEmployee({ onAddEmployee, employees }) {
         </div>
       </div>
 
-      {/* Employee Form */}
       <form className="employee-form" onSubmit={handleSubmit}>
+
+        {error && (
+          <p style={{ color: "red" }}>{error}</p>
+        )}
 
         <div className="form-group">
           <label>Full Name</label>
@@ -167,25 +190,27 @@ function AddEmployee({ onAddEmployee, employees }) {
           </select>
         </div>
 
-        {/* Buttons */}
         <div className="form-actions">
 
-          <button type="submit" className="save-button">
-            Add Employee
+          <button
+            type="submit"
+            className="save-button"
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Add Employee"}
           </button>
 
           <button
             type="button"
             className="cancel-button"
             onClick={() => navigate("/employees")}
+            disabled={saving}
           >
             Cancel
           </button>
 
         </div>
-
       </form>
-
     </div>
   );
 }
