@@ -19,7 +19,7 @@ import {
   updateEmployee,
   deleteEmployee
 } from "./services/employeeService";
-import { CanSoda } from "lucide-react";
+
 
 function App() {
   const [employees, setEmployees] = useState([]);
@@ -85,10 +85,11 @@ const fetchEmployees = async () => {
     try {
 
       console.log("Sending employee data : ", newEmployee);
+
       const response = await createEmployee(newEmployee);
 
 
-      Console.log("POST API RESPONSE : ", response.data);
+      console.log("POST API RESPONSE : ", response.data);
 
       const savedEmployee = {
         ...response.data.data,
@@ -96,8 +97,11 @@ const fetchEmployees = async () => {
       };
 
       setEmployees((prev) => [...prev, savedEmployee]);
+
+      return savedEmployee;
+    
     } catch (err) {
-      console.error("Error adding employee:", err);
+      console.error("Error adding employee:", err.response?.data || err);
       throw err;
     }
   };
