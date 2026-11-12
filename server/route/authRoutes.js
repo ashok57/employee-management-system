@@ -9,6 +9,9 @@ const {
 const { protect } = require("../middleware/authMiddleware");
 
 router.post("/login", login);
-router.get("/me", protect, getMe);
+router.get("/me", protect, (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+}, getMe);
 
 module.exports = router;
