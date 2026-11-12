@@ -1,17 +1,42 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
   Building2,
   Settings,
-  LogOut
+  LogOut,
+  UserCircle,
 } from "lucide-react";
 
+
+import {useAuth} from "../context/AuthContext";
+
+
 function Sidebar() {
+
+  const {user, logout} = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", {replace: true});
+  };
+
   return (
     <div className="sidebar">
 
       <h2>EMS Portal</h2>
+
+    <div className="sidebar-user">
+      <UserCircle size = {35}/>
+      <div>
+         <h4>{user?.name || "User"}</h4>
+
+         <span>
+          {user?.role === "admin" ? "Administrator" : "Employee"}
+         </span>
+      </div>
+    </div>
 
       <nav>
         <NavLink to="/">
@@ -19,23 +44,30 @@ function Sidebar() {
           Dashboard
         </NavLink>
 
-        <NavLink to="/employees">
+        {user?.role === "admin" && (
+          <>
+      <NavLink to="/employees">
           <Users />
           Employees
-        </NavLink>
+      </NavLink>
 
-        <NavLink to="/departments">
+
+      <NavLink to="/departments">
           <Building2 />
-          Departments
-        </NavLink>
+           Departments
+      </NavLink>
 
-        <NavLink to="/settings">
+      <NavLink to="/settings">
           <Settings />
           Settings
-        </NavLink>
-      </nav>
+      </NavLink>
+    </>
+  )}
 
-      <button className="logout">
+</nav>
+
+      <button className="logout"
+      onClick={handleLogout}>
         <LogOut />
         Logout
       </button>

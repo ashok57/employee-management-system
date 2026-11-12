@@ -734,3 +734,49 @@ td button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Sidebar User Information */
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  margin: 20px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.sidebar-user h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.sidebar-user span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Logout Button */
+
+.sidebar .logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% - 20px);
+  margin: auto 10px 15px;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 8px;
+  background: #dc2626;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.sidebar .logout:hover {
+  background: #b91c1c;
+}

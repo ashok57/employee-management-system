@@ -1,110 +1,110 @@
-
-import { useState, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
-  Navigate
+  Navigate,
+  Outlet,
+  useOutletContext,
 } from "react-router-dom";
 
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "./components/Sidebar";
+
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
+import Login from "./pages/Login";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuth } from "./context/AuthContext";
 
 import {
   getEmployees,
   createEmployee,
   updateEmployee,
-  deleteEmployee
+  deleteEmployee,
 } from "./services/employeeService";
 
 
-function App() {
+// Main application layout
+function AppLayout() {
+  const { user, authLoading } = useAuth();
+
   const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   // GET EMPLOYEES
- 
-const fetchEmployees = async () => {
-  try {
-    setLoading(true);
-    setError("");
+  const fetchEmployees = useCallback(async () => {
+    if (user?.role !== "admin") return;
 
-    const response = await getEmployees();
+    try {
+      setLoading(true);
+      setError("");
 
-    console.log("FULL RESPONSE:", response);
-    console.log("RESPONSE DATA:", response.data);
+      const response = await getEmployees();
 
-    // Extract employee array FIRST
-    const employeeData = response.data?.data;
+      const employeeData = response.data?.data;
 
-    // Now check the array
-    console.log(
-      "Is employeeData an array:",
-      Array.isArray(employeeData)
-    );
+      if (!Array.isArray(employeeData)) {
+        throw new Error("Employee data is not an array.");
+      }
 
-    if (!Array.isArray(employeeData)) {
-      console.error("Unexpected API structure:", response.data);
-      throw new Error("Employee data is not an array.");
+      const employeeList = employeeData.map((employee) => ({
+        ...employee,
+        id: employee._id || employee.id,
+      }));
+
+      setEmployees(employeeList);
+
+    } catch (err) {
+      console.error("Error fetching employees:", err);
+
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Unable to load employees."
+      );
+
+    } finally {
+      setLoading(false);
     }
-
-    const employeeList = employeeData.map((employee) => ({
-      ...employee,
-      id: employee._id || employee.id
-    }));
-
-    console.log("Final Employee List:", employeeList);
-
-    setEmployees(employeeList);
-
-  } catch (err) {
-    console.error("Error fetching employees:", err);
-
-    setError(
-      err.response?.data?.message ||
-      err.message ||
-      "Unable to load employees."
-    );
-
-  } finally {
-    setLoading(false);
-  }
-};
+  }, [user?.role]);
 
 
+  // Fetch employees only for Admin
   useEffect(() => {
-    fetchEmployees();
-  }, []);
+    if (user?.role === "admin") {
+      fetchEmployees();
+    } else {
+      setEmployees([]);
+      setLoading(false);
+      setError("");
+    }
+  }, [authLoading, user?.role, fetchEmployees]);
+
 
   // ADD EMPLOYEE
   const handleAddEmployee = async (newEmployee) => {
     try {
-
-      console.log("Sending employee data : ", newEmployee);
-
       const response = await createEmployee(newEmployee);
-
-
-      console.log("POST API RESPONSE : ", response.data);
 
       const savedEmployee = {
         ...response.data.data,
-        id: response.data.data._id
+        id: response.data.data._id,
       };
 
       setEmployees((prev) => [...prev, savedEmployee]);
 
       return savedEmployee;
-    
+
     } catch (err) {
-      console.error("Error adding employee:", err.response?.data || err);
+      console.error("Error adding employee:", err);
       throw err;
     }
   };
+
 
   // UPDATE EMPLOYEE
   const handleUpdateEmployee = async (id, updatedEmployee) => {
@@ -113,7 +113,7 @@ const fetchEmployees = async () => {
 
       const savedEmployee = {
         ...response.data.data,
-        id: response.data.data._id
+        id: response.data.data._id,
       };
 
       setEmployees((prev) =>
@@ -121,11 +121,13 @@ const fetchEmployees = async () => {
           employee.id === id ? savedEmployee : employee
         )
       );
+
     } catch (err) {
       console.error("Error updating employee:", err);
       throw err;
     }
   };
+
 
   // DELETE EMPLOYEE
   const handleDeleteEmployee = async (id) => {
@@ -135,77 +137,166 @@ const fetchEmployees = async () => {
       setEmployees((prev) =>
         prev.filter((employee) => employee.id !== id)
       );
+
     } catch (err) {
       console.error("Error deleting employee:", err);
       throw err;
     }
   };
 
+
+  return (
+    <div className="app-layout">
+
+      <Sidebar />
+
+      <main className="main-content">
+
+        {loading && (
+          <div className="status-message">
+            Loading employees...
+          </div>
+        )}
+
+        {error && (
+          <div className="error-message">
+            {error}
+
+            <button onClick={fetchEmployees}>
+              Retry
+            </button>
+          </div>
+        )}
+
+        <Outlet
+          context={{
+            employees,
+            handleAddEmployee,
+            handleUpdateEmployee,
+            handleDeleteEmployee,
+          }}
+        />
+
+      </main>
+    </div>
+  );
+}
+
+
+// Application routes
+function App() {
   return (
     <BrowserRouter>
-      <div className="app-layout">
 
-        <Sidebar />
+      <Routes>
 
-        <main className="main-content">
+        {/* Public Login Route */}
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-          {loading && (
-            <div className="status-message">
-              Loading employees...
-            </div>
-          )}
+        {/* Protected Application */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
 
-          {error && (
-            <div className="error-message">
-              {error}
-              <button onClick={fetchEmployees}>
-                Retry
-              </button>
-            </div>
-          )}
+          {/* Dashboard: Admin and Employee */}
+          <Route
+            path="/"
+            element={
+              <DashboardWrapper />
+            }
+          />
 
-          <Routes>
-            <Route
-              path="/"
-              element={<Dashboard employees={employees} />}
-            />
+          {/* Admin-only routes */}
+          <Route
+            path="/employees"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <EmployeesWrapper />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route
-              path="/employees"
-              element={
-                <Employees
-                  employees={employees}
-                  onDeleteEmployee={handleDeleteEmployee}
-                />
-              }
-            />
+          <Route
+            path="/add-employee"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AddEmployeeWrapper />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route
-              path="/add-employee"
-              element={
-                <AddEmployee
-                  onAddEmployee={handleAddEmployee}
-                  employees={employees}
-                />
-              }
-            />
+          <Route
+            path="/edit-employee/:id"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <EditEmployeeWrapper />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route
-              path="/edit-employee/:id"
-              element={
-                <EditEmployee
-                  employees={employees}
-                  onUpdateEmployee={handleUpdateEmployee}
-                />
-              }
-            />
+        </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+        {/* Unknown routes */}
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
 
-        </main>
-      </div>
+      </Routes>
+
     </BrowserRouter>
+  );
+}
+
+
+// Get data from AppLayout using Outlet context
+
+function DashboardWrapper() {
+  const { employees } = useOutletContext();
+
+  return <Dashboard employees={employees} />;
+}
+
+function EmployeesWrapper() {
+  const { employees, handleDeleteEmployee } = useOutletContext();
+
+  return (
+    <Employees
+      employees={employees}
+      onDeleteEmployee={handleDeleteEmployee}
+    />
+  );
+}
+
+function AddEmployeeWrapper() {
+  const { employees, handleAddEmployee } = useOutletContext();
+
+  return (
+    <AddEmployee
+      employees={employees}
+      onAddEmployee={handleAddEmployee}
+    />
+  );
+}
+
+function EditEmployeeWrapper() {
+  const {
+    employees,
+    handleUpdateEmployee,
+  } = useOutletContext();
+
+  return (
+    <EditEmployee
+      employees={employees}
+      onUpdateEmployee={handleUpdateEmployee}
+    />
   );
 }
 
